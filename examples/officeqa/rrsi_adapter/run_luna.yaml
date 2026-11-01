@@ -9,7 +9,7 @@
 # (analyst, digesters, critic) are Codex sessions on the same login in hermit's sandbox, reaching chatgpt.com only
 # through the run's allowlist proxy (no session can refresh, and so rotate, the machine's login). RRSI's
 # hyperparameters: rrsi.json (T = 10 rounds of m = 2). After the run, `hermit eval` scores H_T once on the 172 test
-# questions; eval_luna.yaml scores the seed the same way.
+# questions; `hermit eval --config run_luna.yaml --adapter seed_adapter` scores H_0 the same way.
 backends:
   codexplan: {base_url: "https://chatgpt.com/backend-api/codex", key_required: false, api_key_env: null, apis: [chat, responses]}
 data:

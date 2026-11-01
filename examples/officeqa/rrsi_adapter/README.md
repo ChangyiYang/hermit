@@ -18,6 +18,7 @@ cd examples/officeqa/rrsi_adapter
 hermit train --config smoke_luna.yaml                  # 4 questions x 2, one round of two: a check of the plumbing
 hermit train --config run_luna.yaml                    # 10 rounds of two
 hermit eval  --config run_luna.yaml --adapter final    # H_T once on the 172 test questions
+hermit eval  --config run_luna.yaml --adapter seed_adapter   # H_0 the same way, in the same window
 ```
 
 The setting is the README's GPT-5.6-Luna column ([the recipe](../../../docs/recipes/officeqa.md#the-flash-row-with-gpt-56-luna);
