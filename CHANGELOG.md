@@ -18,6 +18,18 @@ Changes are grouped by software version. Entries under Unreleased describe work 
 
 ### Added
 
+- The RRSI Adapter method: RRSI (Xia et al., arXiv:2609.24972), regularized recursive self-improvement, on the
+  Trainer with the harness confined to the adapter (the acting agent is fixed). The `rrsi_adapter` Evolver evaluates
+  one candidate per step on the evolve set (k rows per task) and leaves every other decision to upstream's code at a
+  pinned commit (the `rrsi` dependency group): the annealed edit budget, the edit history, exploration and pruning,
+  the analyst and its digesters, the leakage critic with its repairs, delta's calibration, the noise-adjusted floor,
+  the cost rule and the selection; the proposer and the search roles are Codex or Claude Code sessions. Documented
+  in `docs/methods/rrsi_adapter.md`.
+- The `rrsi-adapter` adapter template: every file outside `.hermit/` is learnable; `.hermit/EVOLVER.md` names RRSI's
+  component vocabulary and what each component's edit must show in the diff.
+- RRSI Adapter on OfficeQA: `examples/officeqa/rrsi_adapter/` (the GPT-5.6-Luna column: ten rounds of two candidates,
+  each training question twice), and Meta-Harness Adapter on the same column
+  (`examples/officeqa/meta_harness_adapter/run_codex_luna.yaml`).
 - `hermit deploy` copies the whole adapter (every file but `.hermit/` and `.git/`) to `hermit/<adapter id>/` in the
   workspace, and the context block says so, with paths in `ADAPTER.md` relative to that folder; what `exports.yaml`
   declares is connected to the host as before. A redeployment replaces the copy, and refuses when a copied file was

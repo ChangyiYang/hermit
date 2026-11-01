@@ -15,6 +15,7 @@ template–method combinations meaningful.
 | Build a persistent world model from an ordered environment stream | [MWM](mwm.md) | `mwm` | Evidence store, deployment description, tools, Linux learner environment |
 | Learn a bank of reflections online, retrieved per instance of an ordered stream | [ReHarness](reharness.md) | `reharness` | The run's `llm`, an embedding endpoint (or BM25), an agent that reads the adapter through `Session.context(query, task)` |
 | Search whole adapters with a coding-agent proposer that reads every earlier candidate's files, scores and trajectories | [Meta-Harness Adapter](meta_harness_adapter.md) | `meta-harness-adapter` | A training split (the search set), a proposer CLI (Codex or Claude Code), an acting agent that delivers the adapter |
+| Evolve whole adapters round by round under regularizers against overfitting the evolve set: an annealed edit budget, the edit history, exploration when stalled, a pre-evaluation leakage critic, a noise-adjusted floor and a cost rule | [RRSI Adapter](rrsi_adapter.md) | `rrsi-adapter` | A training split (the evolve set, k rows per task), a proposer CLI (Codex or Claude Code), the `rrsi` dependency group, a domain module with the benchmark's texts |
 | Learn the framework contract offline | [Quick Start](../get-started/quickstart.md) | Prompt-only with a teaching learner | Included toy tasks |
 
 ## Compare the work behind each step

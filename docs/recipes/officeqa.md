@@ -601,6 +601,8 @@ Codex on the plan.
 | Continual Harness, the stream's answers | stream over the 172, no training split, no judge verdict | **0.477** [0.401, 0.552] | one stream (the seed-0 order) |
 | ReHarness, the stream's answers | stream over the 172, no training split, no judge verdict | **0.517** [0.442, 0.593] | one stream (the seed-0 order) |
 | Harness², deliverable | stream over the 172, no training split, no judge verdict | **0.611** [0.535, 0.680] | one stream (seed 0); its reference execution of the initial skill: 0.390 [0.320, 0.465] |
+| Meta-Harness Adapter, best on the search set | search on the 50 / test on 172 | **0.605** [0.535, 0.680] | one training (`meta_harness_adapter/run_codex_luna.yaml`, six rounds of two, 650 rollouts) |
+| RRSI Adapter, H_T | evolve on the 50 (two trials each) / test on 172 | **0.593** [0.523, 0.663] | one training (`rrsi_adapter/run_luna.yaml`, ten rounds of two); its starting adapter in the same harness and window: 0.378 [0.308, 0.454] |
 
 Paired per question, 95% bootstrap intervals, a method's four runs averaged per question first; bold where the
 interval excludes zero; the Flash row's GLM intervals beside them:
@@ -619,6 +621,16 @@ interval excludes zero; the Flash row's GLM intervals beside them:
 | Continual Harness − Harness² deliverable | **−13.4** [−20.3, −6.4] | 9 / 32 | −1.7 [−7.6, +4.1] |
 | ReHarness − Harness² deliverable | **−9.3** [−15.7, −2.9] | 8 / 24 | |
 | ReHarness − Continual Harness | +4.1 [−2.3, +10.5] | 19 / 12 | |
+| Meta-Harness Adapter − RRSI's starting adapter (same harness and seed) | **+22.7** [+15.1, +30.2] | 46 / 7 | |
+| Meta-Harness Adapter − GEPA | +0.4 [−3.9, +4.7] | 27 / 22 | |
+| Meta-Harness Adapter − Harness² deliverable | −0.6 [−6.4, +5.2] | 12 / 13 | |
+| RRSI Adapter − Meta-Harness Adapter | −1.2 [−5.8, +3.5] | 8 / 10 | |
+| RRSI Adapter − its starting adapter (same harness, same window) | **+21.5** [+14.0, +29.7] | 46 / 9 | |
+| RRSI Adapter − GEPA | −0.7 [−5.1, +3.5] | 27 / 24 | |
+| RRSI Adapter − SkillOpt | +4.7 [−0.1, +9.4] | 40 / 19 | |
+| RRSI Adapter − Harness² deliverable | −1.7 [−8.1, +4.1] | 13 / 16 | |
+| RRSI Adapter − ReHarness | **+7.6** [+1.2, +14.0] | 23 / 10 | |
+| RRSI Adapter − Continual Harness | **+11.6** [+4.7, +18.6] | 30 / 10 | |
 
 The differences against no skill and the initial skill are a little high: those two evaluations lost 4 and 3
 sessions to the login's rate limit (at most 2.3 and 1.7 points; by the cells' own rates about 0.7 and 0.6, by those
@@ -638,10 +650,13 @@ gains over the reference execution overlap GLM's intervals: they cannot be calle
   | ReHarness | 89 | 26 | 57 | 0 | 0.669 |
   | Harness², deliverable | 105 | 17 | 50 | 0 | 0.709 |
   | Harness², reference execution | 67 | 55 | 50 | 0 | 0.709 |
+  | RRSI Adapter, its starting adapter (same harness, same window) | 65 | 52 | 55 | 0 | 0.680 |
+  | RRSI Adapter, H_T | 102 | 14 | 56 | 0 | 0.674 |
 
   Paired on the value alone, GEPA − initial skill is −0.9 [−5.7, +3.8], SkillOpt − initial skill −2.8 [−7.7, +2.0],
   Harness² − its reference execution 0.0 [−4.7, +4.7], Continual Harness − the reference execution −2.3 [−7.6, +2.9]
-  and ReHarness − the reference execution −4.1 [−9.9, +1.7]: the learned adapters turn "right value, other form" into
+  and ReHarness − the reference execution −4.1 [−9.9, +1.7], RRSI Adapter − its starting adapter −0.6 [−5.8, +4.7]
+  (checked the same way, answer by answer, after the column): the learned adapters turn "right value, other form" into
   exact matches and little else. Two automatic readings (the reference answer at the start of the answer; anywhere in
   it) never pass a wrong answer but miss many right values (a `%` the reference answer has or lacks, 109 answers;
   list separators 23; a final period 22; trailing zeros 20; a U+2212 minus sign in the reference answer 17), hence

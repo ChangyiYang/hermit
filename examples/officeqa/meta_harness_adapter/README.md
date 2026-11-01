@@ -62,3 +62,13 @@ Python. Its formatting rule quotes two training answers as examples of a bare nu
 Spending and time: rollouts USD 8.39 (650 on the search set), proposer USD 0.17, 1.5 h; the test evaluation USD
 1.82. The method's row is on the [recipe's Flash row](../../../docs/recipes/officeqa.md#the-flash-row) with the
 others'; the paper's own runs are larger (about 20 rounds of 2-3 candidates).
+
+### With GPT-5.6-Luna
+
+`run_codex_luna.yaml` (run `luna-mh`, 2026-11-01): the same protocol with Codex 0.164.0 and GPT-5.6-Luna (medium)
+acting and proposing on the machine's ChatGPT login (the README's second column). The starting adapter scored 0.38 on
+the search set and the twelve candidates 0.62 to 0.68; `r06_source_cell_guard` (0.68) was handed back and scores
+**0.605** [0.535, 0.680] on the 172 test questions, against 0.378 for the same starting adapter in the same harness
+(RRSI Adapter's evaluation of it: paired +22.7 [+15.1, +30.2]), level with GEPA (+0.4 [−3.9, +4.7]) and Harness²
+(−0.6 [−6.4, +5.2]) on that column. 650 rollouts, 125 M tokens; the proposer 3 M tokens; 0.9 h.
+
