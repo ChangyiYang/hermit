@@ -581,6 +581,27 @@ def test_the_digesters_shell_runs_through_the_sandbox_while_bound():
     assert calls and rrsi.digester.subprocess is original
 
 
+def test_the_digesters_shell_runs_in_the_visible_copy_of_the_traces(tmp_path):
+    # Upstream's digester runs its shell with cwd = the round's rendered traces, under the state the sandbox covers;
+    # the command must run in the visible copy, where its relative paths name the same files.
+    state = tmp_path / "state"
+    rendered = state / "rrsi" / "r0" / "analysis" / "rendered"
+    rendered.mkdir(parents=True)
+    (rendered / "T1.txt").write_text("hidden original\n")
+    copy = tmp_path / "scratch" / "rrsi_roles" / "rendered_r0"
+    copy.mkdir(parents=True)
+    (copy / "T1.txt").write_text("visible copy\n")
+    run = R.SandboxedSubprocess(None, [state], visible=copy).run
+    out = run("cat T1.txt", shell=True, cwd=rendered, capture_output=True, text=True)
+    assert out.stdout == "visible copy\n"
+    other = tmp_path / "elsewhere"
+    other.mkdir()
+    (other / "T1.txt").write_text("elsewhere\n")
+    assert run("cat T1.txt", shell=True, cwd=other, capture_output=True, text=True).stdout == "elsewhere\n"
+    assert R.SandboxedSubprocess(None, [state]).run("cat T1.txt", shell=True, cwd=rendered, capture_output=True,
+                                                    text=True).stdout == "hidden original\n"
+
+
 def test_strict_hiding_refuses_a_command_it_could_not_cover(tmp_path):
     hidden = tmp_path / "state"
     hidden.mkdir()

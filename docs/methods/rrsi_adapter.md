@@ -137,7 +137,7 @@ does; three failed steps in a row stop the run, as upstream's driver does.
 | The proposer's isolation | Its own worktree; its JSON actions reach only the harness and the round's traces | Its own working directory (the candidate and the round's context); the learning material, the state, the history, the working copy, the step's logs, the roles' calls and every other variant are hidden by the run's sandbox, and a session refuses to run where they cannot be | matched |
 | Candidate files | The worktree's git diff | The diff between the incumbent's stored files and the staged candidate (without byte code, caches, nested repositories and what git would not commit); symbolic links are refused, as in Meta-Harness Adapter | forced by the framework |
 | The critic's precheck | Upstream's patterns and the domain's | The same, plus, for OfficeQA, the training answers the judge's feedback has revealed (whole answers and their longer numbers) | the reproduction's |
-| The digesters' read-only shell action | Runs on the host | Runs under the run's sandbox with the workspace's records covered | the reproduction's |
+| The digesters' read-only shell action | Runs on the host, in the round's rendered traces | Runs under the run's sandbox with the workspace's records covered, in the copy of the round's traces the digesters' sessions read | the reproduction's |
 
 ## Records to read after a run
 

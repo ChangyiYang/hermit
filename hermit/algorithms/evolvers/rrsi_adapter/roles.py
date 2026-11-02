@@ -64,17 +64,29 @@ def bound(generate, digester_subprocess=None):
 class SandboxedSubprocess:
     """What the digester sees as `subprocess` while bound: its `run(cmd, shell=True, cwd=...)` runs the command
     under the run's sandbox with the workspace's records covered, as every other command a learner starts does.
-    Upstream's allowlist of read-only commands (rrsi.digester._bash_ok) still applies before it is called."""
+    Upstream's allowlist of read-only commands (rrsi.digester._bash_ok) still applies before it is called.
+
+    The digester runs its shell in the round's rendered traces, which upstream writes under the run's state, and the
+    sandbox covers the state: a working directory under a covered path is replaced by `visible`, the copy of those
+    traces the digesters' sessions read, so relative paths name the same files."""
 
     TimeoutExpired = subprocess.TimeoutExpired
     CalledProcessError = subprocess.CalledProcessError
 
-    def __init__(self, sandbox, hide: list[Path]):
-        self.sandbox, self.hide = sandbox, list(hide)
+    def __init__(self, sandbox, hide: list[Path], visible: Path | None = None):
+        self.sandbox, self.hide, self.visible = sandbox, list(hide), visible
+
+    def _cwd(self, cwd):
+        if cwd is None or self.visible is None:
+            return cwd
+        c = Path(cwd).resolve()
+        covered = any(c == h.resolve() or h.resolve() in c.parents for h in self.hide)
+        return str(self.visible) if covered else cwd
 
     def run(self, cmd, shell: bool = False, cwd=None, **kw):
         args = ["bash", "-c", cmd] if shell else list(cmd)
         env = kw.pop("env", None)
+        cwd = self._cwd(cwd)
         if self.sandbox is not None:
             from hermit.sandbox import HidingSandbox
             args, env = HidingSandbox(self.sandbox, self.hide).wrap(args, env=dict(env or os.environ))
@@ -127,7 +139,7 @@ class CodexRoles:
         self.log_dir.mkdir(parents=True, exist_ok=True)
 
     def sandboxed_subprocess(self) -> SandboxedSubprocess:
-        return SandboxedSubprocess(self.ctx.sandbox, self.hide)
+        return SandboxedSubprocess(self.ctx.sandbox, self.hide, visible=self.traces)
 
     def _cancelled(self) -> bool:
         return self.ctx.cancel is not None and self.ctx.cancel.is_set()
