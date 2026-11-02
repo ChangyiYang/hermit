@@ -72,6 +72,11 @@ Changes are grouped by software version. Entries under Unreleased describe work 
 
 ### Added
 
+- ASPIRE (arXiv:2607.00272) as a method: the `aspire` template (a skill library of Markdown entries rendered whole as
+  the actor's context, every snippet checked under the CaP program rules) and the `aspire` Evolver (the coordinator:
+  repairs graded entries, pre-screens proposed ones and admits them only when a fresh actor re-solves the task from
+  the library and the proposals on the task's verifier row), with `examples/aspire_robosuite/`: ASPIRE's fix loop and
+  evolutionary search as the acting agent on the Robosuite tasks of ASPIRE's harness.
 - A ChatGPT login's plan, for every Codex session on it (`hermit/agent/base/login.py`): files under
   `~/.cache/hermit/codex-login/plan/` pause new sessions (`PAUSE`), hold them past a usage threshold (`MAX_USED`) and
   cap the sessions at once on the machine (`SLOTS`); each session's report of the plan's usage is kept (`plan.json`);
