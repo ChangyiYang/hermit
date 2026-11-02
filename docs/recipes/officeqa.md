@@ -575,8 +575,9 @@ judge, the
 Evolvers' parameters, the session limits (SkillOpt's 180 s × 24 sessions for the trainings and the reference
 evaluations, 3,600 s for the streams), the configured concurrency, ReHarness's embedding model (Qwen3-Embedding-8B on
 Fireworks behind its launcher's wire meter: the plan serves no embeddings) and the one test pass are the Flash row's;
-Meta-Harness Adapter was not run. The first six methods ran from the example's code on top of 2056e43, ReHarness
-after main (0d3df08) was merged in. What differs:
+Meta-Harness Adapter and RRSI Adapter ran later, with the RRSI Adapter change
+(`meta_harness_adapter/run_codex_luna.yaml`, `rrsi_adapter/run_luna.yaml` and `run_luna_eng.yaml`). The first six
+methods ran from the example's code on top of 2056e43, ReHarness after main (0d3df08) was merged in. What differs:
 
 | Setting | The Flash row | With GPT-5.6-Luna |
 |---|---|---|
@@ -601,8 +602,8 @@ Codex on the plan.
 | Continual Harness, the stream's answers | stream over the 172, no training split, no judge verdict | **0.477** [0.401, 0.552] | one stream (the seed-0 order) |
 | ReHarness, the stream's answers | stream over the 172, no training split, no judge verdict | **0.517** [0.442, 0.593] | one stream (the seed-0 order) |
 | Harness², deliverable | stream over the 172, no training split, no judge verdict | **0.611** [0.535, 0.680] | one stream (seed 0); its reference execution of the initial skill: 0.390 [0.320, 0.465] |
-| Meta-Harness Adapter, best on the search set | search on the 50 / test on 172 | **0.605** [0.535, 0.680] | one training (`meta_harness_adapter/run_codex_luna.yaml`, six rounds of two, 650 rollouts) |
-| RRSI Adapter, H_T | evolve on the 50 (two trials each) / test on 172 | **0.593** [0.523, 0.663] | one training (`rrsi_adapter/run_luna.yaml`, ten rounds of two); its starting adapter in the same harness and window: 0.378 [0.308, 0.454] |
+| Meta-Harness Adapter, best on the search set | search on the 50 / test on 172 | **0.605** [0.529, 0.674] | one training (`meta_harness_adapter/run_codex_luna.yaml`, six rounds of two, 650 rollouts) |
+| RRSI Adapter, H_T | evolve on the 50 (two trials each) / test on 172 | **0.602** [0.538, 0.663] (sd 0.017) | 0.605, 0.581, 0.599, 0.622 (`rrsi_adapter/run_luna.yaml` with `agent.concurrency=6`, ten rounds of two); the first training, before the integration's review, 0.593; one training with the engineering instance's selection weights (`run_luna_eng.yaml`) 0.616 [0.547, 0.686]; the starting adapter in this harness: 0.378 [0.308, 0.448] |
 
 Paired per question, 95% bootstrap intervals, a method's four runs averaged per question first; bold where the
 interval excludes zero; the Flash row's GLM intervals beside them:
@@ -624,13 +625,14 @@ interval excludes zero; the Flash row's GLM intervals beside them:
 | Meta-Harness Adapter − RRSI's starting adapter (same harness and seed) | **+22.7** [+15.1, +30.2] | 46 / 7 | |
 | Meta-Harness Adapter − GEPA | +0.4 [−3.9, +4.7] | 27 / 22 | |
 | Meta-Harness Adapter − Harness² deliverable | −0.6 [−6.4, +5.2] | 12 / 13 | |
-| RRSI Adapter − Meta-Harness Adapter | −1.2 [−5.8, +3.5] | 8 / 10 | |
-| RRSI Adapter − its starting adapter (same harness, same window) | **+21.5** [+14.0, +29.7] | 46 / 9 | |
-| RRSI Adapter − GEPA | −0.7 [−5.1, +3.5] | 27 / 24 | |
-| RRSI Adapter − SkillOpt | +4.7 [−0.1, +9.4] | 40 / 19 | |
-| RRSI Adapter − Harness² deliverable | −1.7 [−8.1, +4.1] | 13 / 16 | |
-| RRSI Adapter − ReHarness | **+7.6** [+1.2, +14.0] | 23 / 10 | |
-| RRSI Adapter − Continual Harness | **+11.6** [+4.7, +18.6] | 30 / 10 | |
+| RRSI Adapter − its starting adapter (same harness) | **+22.4** [+15.7, +29.1] | 64 / 18 | |
+| RRSI Adapter − GEPA | +0.1 [−3.2, +3.6] | 27 / 32 | |
+| RRSI Adapter − SkillOpt | **+5.5** [+1.0, +10.0] | 46 / 28 | |
+| RRSI Adapter − Harness² deliverable | −0.9 [−6.1, +4.5] | 27 / 36 | |
+| RRSI Adapter − Meta-Harness Adapter | −0.3 [−4.7, +4.1] | 25 / 31 | |
+| RRSI Adapter − ReHarness | **+8.4** [+2.9, +14.4] | 39 / 28 | |
+| RRSI Adapter − Continual Harness | **+12.5** [+6.2, +18.9] | 46 / 28 | |
+| RRSI Adapter, engineering weights − RRSI Adapter | +1.5 [−3.5, +6.2] | 36 / 23 | |
 
 The differences against no skill and the initial skill are a little high: those two evaluations lost 4 and 3
 sessions to the login's rate limit (at most 2.3 and 1.7 points; by the cells' own rates about 0.7 and 0.6, by those
@@ -638,7 +640,9 @@ questions' scores in the other nine one-pass evaluations about 1.1 and 0.7). Con
 gains over the reference execution overlap GLM's intervals: they cannot be called larger than GLM's.
 
 - **Where the points go.** Every answer was checked one by one (2,408: 172 per cell, 688 for GEPA's and SkillOpt's
-  four trainings together) for whether its value is right and whether its form is the one the judge accepts:
+  four trainings together) for whether its value is right and whether its form is the one the judge accepts; the
+  RRSI Adapter and Meta-Harness Adapter rows were checked afterwards on their 585 answers that are not exact matches
+  (338 distinct; an exact match has the right value in the accepted form):
 
   | Cell | exact match | right value, other form | wrong value | no answer (timed out) | right value |
   |---|---|---|---|---|---|
@@ -650,13 +654,17 @@ gains over the reference execution overlap GLM's intervals: they cannot be calle
   | ReHarness | 89 | 26 | 57 | 0 | 0.669 |
   | Harness², deliverable | 105 | 17 | 50 | 0 | 0.709 |
   | Harness², reference execution | 67 | 55 | 50 | 0 | 0.709 |
-  | RRSI Adapter, its starting adapter (same harness, same window) | 65 | 52 | 55 | 0 | 0.680 |
-  | RRSI Adapter, H_T | 102 | 14 | 56 | 0 | 0.674 |
+  | RRSI Adapter, its starting adapter (same harness) | 65 | 53 | 54 | 0 | 0.686 |
+  | RRSI Adapter, four trainings | 414 | 63 | 211 | 0 | 0.693 |
+  | RRSI Adapter, engineering weights | 106 | 12 | 54 | 0 | 0.686 |
+  | RRSI Adapter, the first training | 102 | 14 | 56 | 0 | 0.674 |
+  | Meta-Harness Adapter | 104 | 14 | 54 | 0 | 0.686 |
 
   Paired on the value alone, GEPA − initial skill is −0.9 [−5.7, +3.8], SkillOpt − initial skill −2.8 [−7.7, +2.0],
   Harness² − its reference execution 0.0 [−4.7, +4.7], Continual Harness − the reference execution −2.3 [−7.6, +2.9]
-  and ReHarness − the reference execution −4.1 [−9.9, +1.7], RRSI Adapter − its starting adapter −0.6 [−5.8, +4.7]
-  (checked the same way, answer by answer, after the column): the learned adapters turn "right value, other form" into
+  and ReHarness − the reference execution −4.1 [−9.9, +1.7], RRSI Adapter (four trainings) − its starting adapter
+  +0.7 [−3.5, +4.9] and Meta-Harness Adapter − the same starting adapter 0.0 [−4.7, +4.7] (checked the same way,
+  answer by answer, after the column): the learned adapters turn "right value, other form" into
   exact matches and little else. Two automatic readings (the reference answer at the start of the answer; anywhere in
   it) never pass a wrong answer but miss many right values (a `%` the reference answer has or lacks, 109 answers;
   list separators 23; a final period 22; trailing zeros 20; a U+2212 minus sign in the reference answer 17), hence

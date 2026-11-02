@@ -152,6 +152,7 @@ does; three failed steps in a row stop the run, as upstream's driver does.
 ## Examples
 
 `examples/officeqa/rrsi_adapter/` runs it on OfficeQA with GPT-5.6-Luna acting and learning through Codex (the luna
-column of the example's results): ten rounds of two candidates on the 50 training questions, and the final incumbent
-scores 0.593 on the 172 test questions, from 0.378 for its starting adapter in the same harness, level with GEPA and
-Harness² on that column; as for the column's other methods, the gain is the answer's form.
+column of the example's results): ten rounds of two candidates on the 50 training questions, two trials each. Over
+four trainings the final incumbent scores 0.602 on the 172 test questions (0.581–0.622), from 0.378 for its starting
+adapter in the same harness: level with GEPA, Meta-Harness Adapter and Harness² on that column and above SkillOpt;
+as for the column's other methods, the gain is the answer's form.

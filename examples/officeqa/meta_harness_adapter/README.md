@@ -68,7 +68,8 @@ others'; the paper's own runs are larger (about 20 rounds of 2-3 candidates).
 `run_codex_luna.yaml` (run `luna-mh`, 2026-11-01): the same protocol with Codex 0.164.0 and GPT-5.6-Luna (medium)
 acting and proposing on the machine's ChatGPT login (the README's second column). The starting adapter scored 0.38 on
 the search set and the twelve candidates 0.62 to 0.68; `r06_source_cell_guard` (0.68) was handed back and scores
-**0.605** [0.535, 0.680] on the 172 test questions, against 0.378 for the same starting adapter in the same harness
-(RRSI Adapter's evaluation of it: paired +22.7 [+15.1, +30.2]), level with GEPA (+0.4 [−3.9, +4.7]) and Harness²
-(−0.6 [−6.4, +5.2]) on that column. 650 rollouts, 125 M tokens; the proposer 3 M tokens; 0.9 h.
+**0.605** [0.529, 0.674] on the 172 test questions, against 0.378 for the same starting adapter in the same harness
+(RRSI Adapter's evaluation of it: paired +22.7 [+15.1, +30.2]), level with GEPA (+0.4 [−3.9, +4.7]), Harness² (−0.6
+[−6.4, +5.2]) and RRSI Adapter's four trainings (+0.3 [−4.1, +4.7]) on that column. 650 rollouts, 125 M tokens; the
+proposer 3 M tokens; 0.9 h.
 

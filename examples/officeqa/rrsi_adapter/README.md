@@ -44,62 +44,81 @@ each candidate's files.
 
 ## Result
 
-One training (`run_luna.yaml`, run `luna-rrsi`, 2026-11-01) and one evaluation of its final adapter H_T on the 172 test
-questions, with H_0 evaluated the same way in the same window; Codex 0.164.0 with GPT-5.6-Luna (medium) acting and
-learning, 3,600 s per session; exact match. One pass, so each accuracy carries a standard error of about 3.7 points.
+Four trainings with this Evolver (`run_luna.yaml`, runs `luna-rrsi-r2` to `luna-rrsi-r5`, 2026-11-01), one with the
+engineering instance's selection weights (`run_luna_eng.yaml`, run `luna-rrsi-eng`) and the first training
+(`luna-rrsi`, made with the Evolver as it was before an independent review; see the note at the end). Each final
+adapter H_T was evaluated once on the 172 test questions, and H_0 once in the first training's window; Codex 0.164.0
+with GPT-5.6-Luna (medium) acting and learning, 3,600 s per session; exact match. The four trainings, the engineering
+arm and their test evaluations ran with `agent.concurrency=6` on the command line (five trainings side by side on one
+login); the first training and H_0's evaluation ran with the configs' 10. A one-pass accuracy carries a standard error
+of about 3.7 points.
 
-On the evolve set (50 questions x 2 trials) H_0 scored 0.41 and upstream's calibration put delta at 0.067 (about 7
-of the 100 trials; its within-task bootstrap reads low by about sqrt(2) with two trials, as upstream's does). Ten
-rounds of two candidates: 15 were measured, 4 were accepted, and the 5 exploration variants of the stalled rounds (4,
-6-9) never reached evaluation. In rounds 6-9, 22 of their 24 verdicts were the reserved-slot check, not the critic's
-judgement: the template's guide described components (a procedure in prose, settings, notes) that the tag check does
-not read, so the slot was out of reach and those rounds had one real candidate each. This was fixed after the run
-(the guide now names what each tag needs in the diff, and a domain declares the components its agent can carry);
-see the note at the end.
-
-| Round | Accepted candidate | S (50 x 2) | dS | dC | Why it was admissible |
-|---|---|---|---|---|---|
-| 0 | `r00B`: an answer-serialization rule and a pre-calculation specification of the measure, period and convention in `ADAPTER.md` | 0.63 | +0.22 | +0.9% | dS > delta, within the cost rule (A, 0.62, also admissible) |
-| 1 | `r01B` | 0.62 | -0.01 | -1.0% | inside the band, fewer tokens |
-| 5 | `r05A` | 0.63 | +0.01 | -6.7% | inside the band, fewer tokens |
-| 7 | `r07A` = H_T | 0.66 | +0.03 | -6.2% | inside the band, fewer tokens |
-
-The three in-band acceptances cut tokens by less than twice the null spread of two evaluations of the same adapter
-(sd of dC about 8.7%, from the unbiased within-task variance of H_0's two trials per question): with the coding
-instance's weights (w_s = 0) an in-band candidate is admitted for any token saving, so these are noise-level choices,
-as the method defines them. Candidates that
-scored higher inside the band but cost tokens were refused (rounds 2 and 3: 0.67 at +1.5% and +10%), and so were new
-structural components that did not pay for their tokens (a helper script at +41%, a skill at +15%, notes at +3.4%).
-
-| Test (172) | accuracy [95% bootstrap] |
+| Test (172), one pass each | accuracy [95% bootstrap] |
 |---|---|
-| H_0, SkillOpt's initial skill, this harness, the same window | 0.378 [0.308, 0.454] |
-| **RRSI Adapter, H_T** | **0.593** [0.523, 0.663] |
+| H_0, SkillOpt's initial skill, this harness | 0.378 [0.308, 0.448] |
+| **RRSI Adapter, H_T, mean of four trainings** | **0.602** [0.538, 0.663]: 0.605, 0.581, 0.599, 0.622 (sd 0.017) |
+| RRSI Adapter, the engineering instance's selection weights, one training | 0.616 [0.547, 0.686] |
+| RRSI Adapter, the first training (before the review) | 0.593 [0.517, 0.663] |
 
-Paired per question with 95% bootstrap intervals, against the GPT-5.6-Luna column: RRSI Adapter - H_0 **+21.5**
-[+14.0, +29.7] (46 won, 9 lost); - GEPA -0.7 [-5.1, +3.5]; - SkillOpt +4.7 [-0.1, +9.4]; - Harness² -1.7 [-8.1,
-+4.1]; - ReHarness **+7.6** [+1.2, +14.0]; - Continual Harness **+11.6** [+4.7, +18.6]. All of the gain over H_0 is
-the answer's form, as in the rest of the column: checked answer by answer, the questions answered with the right
-value in another form fall from 52 to 14, and the share with the right value stays at 0.68 (0.680 -> 0.674; paired on
-the value alone -0.6 [-5.8, +4.7], 10 won, 11 lost). H_T used 8% fewer tokens per question than H_0 on average (170 K
-against 185 K; paired 95% interval -18% to +3.5%; fewer on 83 of 172 questions, the median question 2% more), not
-distinguishable from no change.
+Paired per question with 95% bootstrap intervals, the four trainings averaged per question first as the column
+averages GEPA's and SkillOpt's four, against the GPT-5.6-Luna column: RRSI Adapter − H_0 **+22.4** [+15.7, +29.1] (64
+won, 18 lost); − GEPA +0.1 [−3.2, +3.6]; − SkillOpt **+5.5** [+1.0, +10.0]; − Harness² −0.9 [−6.1, +4.5]; −
+Meta-Harness Adapter −0.3 [−4.7, +4.1]; − ReHarness **+8.4** [+2.9, +14.4]; − Continual Harness **+12.5** [+6.2,
++18.9]. The first training lies among the four (−0.9 [−5.7, +3.9] against their mean): the review's fixes did not move
+the result. All of the gain over H_0 is the answer's form, as in the rest of the column. Every non-exact answer was
+read for whether its value is right (each read as right, or where the reading and an automatic match disagreed, read
+again independently: the same verdict all 83 times): the share of answers with the right value is 0.686 for H_0 and
+0.693 over the four trainings (0.663–0.709 each); paired on the value alone, the four trainings − H_0 is +0.7 [−3.5,
++4.9]. What changes is the form: the answers with the right value in a form the judge rejects fall from 53 to 16 per
+training on average.
 
-H_T is `ADAPTER.md` alone (5.2 KB, from 0.9 KB): the starting skill with a pre-calculation specification of the
-measure, period and convention, `<answer>` treated as a serialization step, a bounded operand ledger checked against
-one contiguous source excerpt, a bounded recovery branch for missing tables, and a written input-operation-output
-mapping computed twice. It names no question, file or value.
+On the evolve set (the 50 training questions, two trials each):
 
-Spending and time: 16 evaluation steps (1,600 rollouts), 317 M tokens; the proposer and the search roles 218 M
-tokens (56 proposer sessions, counting the resumed ones that fixed a done.json or answered the critic, and the
-analyst's, digesters' and critic's calls, each one Codex session) and the 30 smoke rollouts 2.5 M (together the
-Evolver's 221 M); 5.5 h; the two test evaluations 7 and 9 min. All on the Codex plan, no API key.
+| Run | delta | H_0 | candidates measured / refused | accepted (inside the noise band) | H_T: S, files | rollouts; tokens of the rollouts + the Evolver; time |
+|---|---|---|---|---|---|---|
+| `luna-rrsi-r2` | 0.063 | 0.42 | 20 / 0 | 4 (3) | `r06B` 0.61: `ADAPTER.md` and two helper scripts, 9.6 KB | 2,100; 465 M + 165 M; 7.3 h |
+| `luna-rrsi-r3` | 0.052 | 0.41 | 20 / 0 | 3 (2) | `r03A` 0.67: `ADAPTER.md` and a statistics script, 8.0 KB | 2,100; 405 M + 151 M; 6.5 h |
+| `luna-rrsi-r4` | 0.045 | 0.45 | 20 / 0 | 3 (2) | `r08B` 0.62: `ADAPTER.md`, 3.8 KB | 2,100; 401 M + 134 M; 6.3 h |
+| `luna-rrsi-r5` | 0.066 | 0.43 | 20 / 0 | 2 (1) | `r07B` 0.66: `ADAPTER.md`, 4.0 KB | 2,100; 397 M + 149 M; 6.6 h |
+| `luna-rrsi-eng` | 0.053 | 0.45 | 20 / 0 | 2 (1) | `r03A` 0.71: `ADAPTER.md`, 2.2 KB | 2,100; 395 M + 162 M; 7.0 h |
+| `luna-rrsi` (before the review) | 0.067 | 0.41 | 15 / 5 | 4 (3) | `r07A` 0.66: `ADAPTER.md`, 5.2 KB | 1,600; 317 M + 221 M; 5.5 h |
 
-This run used the Evolver as it was before an independent review of the integration on 2026-11-01, which found and
-fixed: the exploration slot above; proposer sessions that ran from the workspace root (a few relative writes were lost
-and cost repair rounds); variants that could read each other's session logs; the critic's diff taken from a git
-repository inside the candidate instead of from the stored files; no check against symbolic links in a candidate; the
-digesters' read-only shell commands running outside the run's sandbox; and an unbounded re-hand-back. None of them
-changed an admission decision in this run (recomputing upstream's selection from the stored measurements gives the
-same winner in every round), and the leakage audit found no question, file or revealed answer in any stored
-candidate. The code each run used is now recorded in `workspace/state/rrsi/code.jsonl`.
+- **Round 0 makes the gain.** In every training the first round's accepted candidate rose 0.20–0.27 above H_0 on the
+  evolve set with prompt edits (above all, `<answer>` as a serialization step: only the requested value or values, in
+  the requested shape, rounding, sign and scale); every later acceptance is inside the noise band.
+- **The exploration slot works.** Every variant of every round reached evaluation (20 of 20, against 15 of 20 in the
+  first training, where the exploration variants of rounds 6–9 failed the tag check and round 4's was refused by the
+  critic), and each training measured every component the agent can carry (`prompt`, `config`, `client_tool`, `skill`,
+  `memory`). Helper scripts entered two final adapters, admitted inside the band for their novelty: `luna-rrsi-r2`'s
+  `scripts/show_context.sh` (a numbered window of a corpus file) and `scripts/calc_fallback.sh` (a calculator), which
+  the acting agent ran in about 163 and 90 of the 172 test sessions, and `luna-rrsi-r3`'s `scripts/stats.py`, run in
+  13.
+- **Selection inside the band.** With the coding instance's weights (w_s = 0) a candidate inside the band is admitted
+  for any token saving, or for a new structural component (`client_tool`, `skill`, `memory`) that adds less than about
+  3% tokens (w_n / w_c = 0.5 / 15), so H_T can score below the best candidate measured: 0.61 where 0.69 was measured
+  (`luna-rrsi-r2`), 0.62 where 0.69 was (`luna-rrsi-r4`), 0.66 where its own round-0 candidate scored 0.70
+  (`luna-rrsi-r5`). The engineering weights (w_s 100, w_c 2: inside the band the score counts) kept the best candidate
+  measured, 0.71, and its H_T scores 0.616 on the test questions, +1.5 [−3.5, +6.2] against the four trainings' mean:
+  one training cannot tell the two weightings apart.
+- **Tokens per test question.** H_0 185 K; the four H_T 241, 167, 182 and 170 K. `luna-rrsi-r2`'s round-0 candidate
+  cost 26% more tokens on the evolve set for +0.23, inside the cost rule (dC <= beta0 + beta1 dS), and its H_T uses
+  30% more on the test questions [+16%, +46%]; the other three are not distinguishable from H_0, nor is the mean of the
+  four (+2.7% [−6.3%, +12.2%]).
+- **No leakage.** No final adapter names a question, a bulletin file, or a training or test answer (checked for
+  question ids, file names, whole answers of four or more characters and numbers of three or more significant digits).
+
+Spending: per training 2,100 evaluation rollouts (395–465 M tokens) and 134–165 M tokens for the proposer, the search
+roles and the smoke rollouts, 6.3–7.3 h with the five trainings side by side; their test evaluations 11–25 min. The
+five trainings and their evaluations took the plan's weekly window from 62% to 74% (whole percents, account-wide: an
+upper bound on their share). All on the Codex plan, no API key.
+
+The first training (`luna-rrsi`) used the Evolver as it was before an independent review of the integration on
+2026-11-01, which found and fixed: the exploration slot (in rounds 6–9, 22 of variant B's 24 verdicts were the
+reserved-slot tag check, not the critic's judgement: the template's guide described components the tag check does not
+read); proposer sessions that ran from the workspace root (a few relative writes were lost); variants that could read
+each other's session logs; the critic's diff taken from a git repository inside the candidate instead of from the
+stored files; no check against symbolic links in a candidate; the digesters' read-only shell commands running outside
+the run's sandbox; and an unbounded re-hand-back. None of them changed an admission decision in that run (recomputing
+upstream's selection from its stored measurements gives the same winner in every round), and its H_T (`ADAPTER.md`
+alone) names no question, file or revealed answer. The code each later run used is recorded in
+`workspace/state/rrsi/code.jsonl`: the four trainings and the engineering arm ran this Evolver.
