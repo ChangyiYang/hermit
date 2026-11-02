@@ -122,6 +122,4 @@ the run's sandbox; and an unbounded re-hand-back. None of them changed an admiss
 upstream's selection from its stored measurements gives the same winner in every round), and its H_T (`ADAPTER.md`
 alone) names no question, file or revealed answer. The code each later run used is recorded in
 `workspace/state/rrsi/code.jsonl`: the four trainings and the engineering arm ran this Evolver as of commit `c8afc5e`
-(the directory digest `9aa5c603…`). One fix came after them: the digesters' read-only shell commands ran in a working
-directory the sandbox covers, so the few they issued (5–10 per training) found no traces, while their other actions
-(reading, searching and listing the traces) worked; they now run in the visible copy of the traces.
+(the directory digest `9aa5c603…`).
