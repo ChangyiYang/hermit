@@ -30,6 +30,7 @@ a `.hermit/CARD.md`.
 | [`clbench_database/`](clbench_database/) | The CL-Bench database exploration stream (accuracy) | `CLBenchDatabaseAgent`: metaworld's host seat in CL-Bench's loop | [`prompt_only`](clbench_database/prompt_only/), [`mwm`](clbench_database/mwm/), [`reharness`](clbench_database/reharness/) |
 | [`clbench_poker/`](clbench_poker/) | The CL-Bench exploitable-poker stream (bb/hand) | `CLBenchPokerAgent` | [`prompt_only`](clbench_poker/prompt_only/), [`mwm`](clbench_poker/mwm/), [`reharness`](clbench_poker/reharness/) |
 | [`servelearnbench/`](servelearnbench/) | A ServeLearnBench scenario: serving stream, per-window tests | `ServeLearnBenchAgent`: the benchmark's own loop | [`prompt_only`](servelearnbench/prompt_only/), [`mwm`](servelearnbench/mwm/) |
+| [`aspire_robosuite/`](aspire_robosuite/) | The Robosuite tasks of ASPIRE's Code-as-Policy harness: development and held-out seeds, task success | `AspireActor`: ASPIRE's fix loop (and evolutionary search) in direct chat, GLM 5.3 Flash, ASPIRE's robot execution engine in its own venv | [`aspire`](aspire_robosuite/aspire/) |
 
 ## Demos
 

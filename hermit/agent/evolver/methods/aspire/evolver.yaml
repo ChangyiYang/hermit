@@ -1,0 +1,12 @@
+description: >-
+  ASPIRE's coordinator (arXiv:2607.00272): acts on each finished robot task's skill report (repairs graded
+  entries), screens its proposed skill entries, has a fresh actor re-solve the task from the library and the
+  proposals alone, and admits the proposals only if it succeeds.
+class: evolver.py:AspireEvolver
+needs: []
+params:
+  verify: true                 # the verifier gate (ASPIRE §2.2); false admits screened proposals directly (ablation)
+  verify_task: "verify-{id}"   # the verifier's task row: the same suite, the verifier's seeds and attempt budget
+  verify_threshold: 0.8        # ASPIRE: verified at >= 4 of 5 seeds
+  max_tokens: 32000
+  temperature: null
