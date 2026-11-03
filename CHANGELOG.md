@@ -72,6 +72,13 @@ Changes are grouped by software version. Entries under Unreleased describe work 
 
 ### Added
 
+- An Evolver can choose the next step's tasks: one that sets `chooses_tasks = True` is given the epoch's training
+  tasks still to run (`Progress.remaining`, also listed in the call's message) and names the next step's in
+  `StepResult.next_tasks` (an external program in `output/step_result.json`). An epoch still runs every training task
+  once; a request outside that is refused and recorded, and the next step takes the Trainer's order, which stays the
+  default. Other Evolvers see nothing ahead and get the same steps and messages as before. Every step record now
+  carries `epoch_end`, which the epoch checkpoint follows, and, when a choice was made, `next_tasks` or
+  `next_tasks_refused` and `chosen_by`.
 - A ChatGPT login's plan, for every Codex session on it (`hermit/agent/base/login.py`): files under
   `~/.cache/hermit/codex-login/plan/` pause new sessions (`PAUSE`), hold them past a usage threshold (`MAX_USED`) and
   cap the sessions at once on the machine (`SLOTS`); each session's report of the plan's usage is kept (`plan.json`);
@@ -128,6 +135,12 @@ Changes are grouped by software version. Entries under Unreleased describe work 
   steps. SkillOpt builds its Codex trace summary from them and GEPA a text of them; ReHarness and Continual Harness
   read them instead of parsing Codex's stream each on its own.
 
+- The ACE method (Zhang et al., ICLR 2026, arXiv:2510.04618): the `ace` Evolver, ACE's per-sample loop of
+  Reflector and Curator over a playbook of bullets with helpful and harmful counters, retry rounds on a wrong answer,
+  ADD-only curation and validation-based selection, with ACE's prompts verbatim (the Generator's adapted for an
+  acting agent); the Reflector and Curator run through the run's `llm` tool; documented in `docs/methods/ace.md`.
+- The `ace` adapter template: an `ADAPTER.md` whose playbook section holds the bullets, after the skill.
+- ACE on OfficeQA: `examples/officeqa/ace/`, in the GPT-5.6-Luna setting (`run_codex_luna.yaml`). The run's `final` playbook is included as `examples/officeqa/ace/adapter/`, with its card.
 - The ReHarness method (Xiao et al., arXiv:2610.12668): the `reharness` Evolver, one step per instance of an ordered
   stream, revising the retrieved reflections from their source trajectories and writing the instance's reflection
   through the run's `llm` tool, with Qwen3-Embedding-8B or BM25 retrieval; `feedback: false` keeps the judge's verdict

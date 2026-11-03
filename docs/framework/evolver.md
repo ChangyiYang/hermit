@@ -58,7 +58,7 @@ The rest of the context supplies:
 | `tools` | Run, task, and template capabilities available to the method. |
 | `message` | Human-readable description of the call and available resources. |
 | `sandbox`, `cancel`, `tool_url` | Program execution helper, cancellation signal, and tool endpoint. |
-| `progress` | On step calls: epoch, step, and whether the epoch ends here. |
+| `progress` | On step and bootstrap calls: epoch, step, whether the epoch ends here, and, for an Evolver that chooses its tasks, the epoch's training tasks still to run (`remaining`). |
 | `session` | Optional previous learner-session handle when session resume is enabled. |
 
 The learner interface does not supply test tasks. Whether files remain inaccessible also depends on the run's
@@ -81,6 +81,36 @@ filesystem grants and execution isolation.
 `Usage` reports model calls, token counts, and cost when known. Calls through the run's metered model (`ctx.agent`, or
 the `llm` tool) are already accounted for; do not report the same usage again in `StepResult`.
 
+### Choosing the next tasks
+
+By default the Trainer takes each step's tasks in order: the next `data.step_size` of the epoch. An Evolver that
+decides what to learn from next (a curriculum) declares it and names the next step's tasks in
+`StepResult.next_tasks`:
+
+```python
+class Curriculum(Evolver):
+    chooses_tasks = True
+
+    def step(self, ctx):
+        ...
+        remaining = ctx.progress.remaining      # the epoch's training tasks still to run, in the Trainer's order
+        return StepResult("done", "...", next_tasks=[pick(remaining)])
+```
+
+Only an Evolver with `chooses_tasks = True` is given `progress.remaining` (also listed in the call's message);
+for every other Evolver it is empty, so a stream's later tasks stay unseen. The request is checked when it is made
+and holds for the next step only. It must be distinct task ids, at most `data.step_size` of them, from
+`progress.remaining`; at the last step of an epoch, where nothing remains, from the training split, which the next
+epoch runs again; `progress.remaining` is then empty, so an Evolver that chooses at an epoch's end keeps the ids it
+was given earlier (the bootstrap is given the first epoch's whole order, and may name the first step's tasks the
+same way). An empty list names nothing. A request is taken from any step result, a failed step's included.
+An epoch still runs every training task once: the tasks the Evolver leaves out come later in the epoch, in the
+Trainer's order. The step's record keeps an accepted request as `next_tasks` and a refused one as
+`next_tasks_refused` with the reason, and the next step then runs the order's tasks; a step that ran the Evolver's
+tasks says `chosen_by: evolver`. A step may hold fewer tasks than `data.step_size`. An external program
+(`CommandEvolver`) names them as `next_tasks` in `output/step_result.json`, from a subclass that sets
+`chooses_tasks = True`.
+
 ### Status handling
 
 | Status | What the Trainer does |
@@ -102,6 +132,7 @@ For selection guidance, setup, and the complete parameter defaults, use [Choose 
 | `codex`, `claude` | A Codex or Claude Code agent edits the adapter from the learning material; `codex` on the `prompt-only@1.0` template is the [prompt-only](../methods/prompt-only.md) method. | The agent CLI |
 | `gepa` | [GEPA](https://github.com/gepa-ai/gepa): one iteration per step. It reflects on the step's trajectories, keeps a child that does better on the same tasks, scores it on validation, and hands back the next parent from its Pareto front. | `llm`, `data.val`, `python -m pip install -e . --group gepa` |
 | `skillopt` | [SkillOpt](https://github.com/microsoft/SkillOpt): one SkillOpt step per training step. It turns the step's trajectories into a few bounded edits under its learning rate (decaying when `total_steps` is set) and keeps them only if the validation score improves; the slow update and meta skill run at each epoch's end. | `llm`, `data.val`, `python -m pip install -e . --group skillopt` |
+| `ace` | [ACE](https://github.com/ace-agent/ace): per rollout, a Reflector tags the playbook bullets the agent named and diagnoses the attempt (a wrong answer is run again with the reflection, up to `max_num_rounds`), and a Curator adds bullets; the playbook grows by deltas. See `docs/methods/ace.md`. | `llm`; `data.val` to keep the best validation playbook |
 | `mwm` | MetaWorld Model, with `template: mwm`: one native MWM learner session per block (the step), under the MWM contract, with the task's evidence store mounted at `/evidence`, in its own network namespace. See `docs/methods/mwm.md`. | The Codex CLI, a task that keeps an MWM evidence store (`evolver_access.environment`), `task-info/mwm/`, `data.shuffle: false` |
 | `reharness` | [ReHarness](../methods/reharness.md), with `template: reharness`: one instance of the stream per step. It revises each reflection the acting agent retrieved, from that reflection's own source trajectory with the new trajectory as feedback, then writes the instance's reflection with the revised ones as demonstrations, through the run's `llm` tool with the paper's prompts; no validation data. | `llm`, `data.step_size: 1` and `data.shuffle: false`, an embedding endpoint (`evolver.params.embedding`, and `REHARNESS_EMBED_URL` for the acting side's reader; BM25 without) |
 | `meta_harness_adapter` | [Meta-Harness Adapter](../methods/meta_harness_adapter.md), with `template: meta-harness-adapter`: one candidate per step. Each step's rollouts evaluate the candidate handed back last; when none is waiting, a Codex or Claude Code proposer reads every earlier candidate's files, scores and trajectories and writes k new adapters, which pass `check_spec` before they are queued; no validation data. | The proposer CLI, `data.step_size` covering the training split (the search set) |
