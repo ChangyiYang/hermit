@@ -286,7 +286,7 @@ class Trainer:
                 remaining = _without(self._order(epoch), ran)
                 while remaining:
                     # The Evolver's accepted request (checked when it was made), else the order's next tasks.
-                    chosen = wanted is not None and not _without(wanted, remaining)
+                    chosen = bool(wanted) and not _without(wanted, remaining)
                     chunk = list(wanted) if chosen else remaining[:step_size]
                     remaining = _without(remaining, chunk)
                     step += 1
@@ -570,8 +570,8 @@ class Trainer:
         data.step_size, of progress.remaining, or at an epoch's end (nothing remaining) of the training split, which
         the next epoch runs again; and only from an Evolver that chooses_tasks."""
         wanted = result.next_tasks
-        if wanted is None or wanted == []:
-            return {}
+        if wanted is None or (isinstance(wanted, (list, tuple)) and not wanted):
+            return {}                         # no request: an empty list names nothing
         step_size = int(self.config.data["data"]["step_size"])
         allowed = progress.remaining or self.data.splits["train"]
         if not self.evolver.chooses_tasks:
